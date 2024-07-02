@@ -1,219 +1,316 @@
 #include <iostream>
 #include <vector>
-#include <fstream>
 #include <string>
-#include <sstream>
-#include <map>
+#include <fstream>
+#include <algorithm>
+#include <random>
 
 using namespace std;
 
+// Structure to represent a student
 struct Student {
-    string firstname;
-    string surname;
-    string gender;
+    string firstName;
+    string lastName;
+    char gender;
     int age;
     int group;
     vector<string> activities;
 };
 
-struct Activity {
+// Structure to represent a club/society
+struct Club {
     string name;
-    int max_capacity;
-    int current_capacity;
-    map<string, int> gender_count;
+    int capacity;
+    int maleCount;
+    int femaleCount;
 };
 
-vector<Student> students;
-map<string, Activity> sports;
-map<string, Activity> clubs;
+// Structure to represent a sport
+struct Sport {
+    string name;
+    int capacity;
+    int maleCount;
+    int femaleCount;
+};
 
-void initialize_activities() {
-    sports["Rugby"] = {"Rugby", 20, 0, {{"Male", 0}, {"Female", 0}}};
-    sports["Athletics"] = {"Athletics", 20, 0, {{"Male", 0}, {"Female", 0}}};
-    sports["Swimming"] = {"Swimming", 20, 0, {{"Male", 0}, {"Female", 0}}};
-    sports["Soccer"] = {"Soccer", 20, 0, {{"Male", 0}, {"Female", 0}}};
-
-    clubs["Journalism Club"] = {"Journalism Club", 60, 0, {{"Male", 0}, {"Female", 0}}};
-    clubs["Red Cross Society"] = {"Red Cross Society", 60, 0, {{"Male", 0}, {"Female", 0}}};
-    clubs["AISEC"] = {"AISEC", 60, 0, {{"Male", 0}, {"Female", 0}}};
-    clubs["Business Club"] = {"Business Club", 60, 0, {{"Male", 0}, {"Female", 0}}};
-    clubs["Computer Science Club"] = {"Computer Science Club", 60, 0, {{"Male", 0}, {"Female", 0}}};
-
-    // List of predefined students and their assignments
-    vector<Student> predefined_students = {
-        {"John", "Doe", "Male", 18, 1, {"Rugby", "AISEC"}},
-        {"Jane", "Smith", "Female", 19, 1, {"Swimming", "Business Club"}},
-        {"Alice", "Johnson", "Female", 18, 2, {"Soccer", "Red Cross Society"}},
-        {"Bob", "Brown", "Male", 20, 2, {"Athletics", "Journalism Club"}},
-        {"Charlie", "Davis", "Male", 19, 3, {"Computer Science Club", "AISEC", "Business Club"}},
-        {"Diana", "Miller", "Female", 18, 3, {"Journalism Club", "Red Cross Society", "AISEC"}}
-    };
-
-    for (auto& s : predefined_students) {
-        for (const auto& activity : s.activities) {
-            if (sports.find(activity) != sports.end()) {
-                sports[activity].current_capacity++;
-                sports[activity].gender_count[s.gender]++;
-            } else if (clubs.find(activity) != clubs.end()) {
-                clubs[activity].current_capacity++;
-                clubs[activity].gender_count[s.gender]++;
-            }
-        }
-        students.push_back(s);
-    }
+// Function to display the main menu
+void displayMainMenu() {
+    cout << "\n*** Co-curricular Activity Selection System ***\n";
+    cout << "1. Add Student\n";
+    cout << "2. View Students\n";
+    cout << "3. View Clubs/Societies\n";
+    cout << "4. View Sports\n";
+    cout << "5. View Grouped Students\n";
+    cout << "6. Save Data\n";
+    cout << "7. Exit\n";
+    cout << "Enter your choice: ";
 }
 
-bool add_student() {
-    Student s;
-    cout << "Enter Firstname: ";
-    cin >> s.firstname;
-    cout << "Enter Surname: ";
-    cin >> s.surname;
-    cout << "Enter Gender (Male/Female): ";
-    cin >> s.gender;
-    cout << "Enter Age: ";
-    cin >> s.age;
-    cout << "Enter Group (1/2/3): ";
-    cin >> s.group;
+// Function to add a new student
+void addStudent(vector<Student>& students) {
+    Student newStudent;
+    cout << "\nEnter Student First Name: ";
+    cin >> newStudent.firstName;
+    cout << "Enter Student Last Name: ";
+    cin >> newStudent.lastName;
+    cout << "Enter Student Gender (M/F): ";
+    cin >> newStudent.gender;
+    cout << "Enter Student Age: ";
+    cin >> newStudent.age;
+    cout << "Enter Student Group (1-3): ";
+    cin >> newStudent.group;
+    students.push_back(newStudent);
+    cout << "\nStudent added successfully!\n";
+}
 
-    if (s.group < 1 || s.group > 3) {
-        cout << "Invalid group number." << endl;
-        return false;
+// Function to display all students
+void viewStudents(const vector<Student>& students) {
+    if (students.empty()) {
+        cout << "\nNo students added yet.\n";
+        return;
     }
-
-    cout << "Choose activities (sporting activities first, then club/societies). Type 'done' when finished:\n";
-    string activity;
-    int sport_count = 0;
-    int club_count = 0;
-
-    while (true) {
-        cin >> activity;
-        if (activity == "done") break;
-
-        if (sports.find(activity) != sports.end()) {
-            if (sport_count >= 1) {
-                cout << "You can only choose one sporting activity." << endl;
-                continue;
-            }
-            if (sports[activity].current_capacity >= sports[activity].max_capacity) {
-                cout << "This sport is full." << endl;
-                continue;
-            }
-            sports[activity].current_capacity++;
-            sports[activity].gender_count[s.gender]++;
-            sport_count++;
-            s.activities.push_back(activity);
-        } else if (clubs.find(activity) != clubs.end()) {
-            if (sport_count == 1 && club_count >= 2) {
-                cout << "You can only choose two clubs if you are participating in a sport." << endl;
-                continue;
-            } else if (sport_count == 0 && club_count >= 3) {
-                cout << "You can only choose up to three clubs." << endl;
-                continue;
-            }
-            if (clubs[activity].current_capacity >= clubs[activity].max_capacity) {
-                cout << "This club is full." << endl;
-                continue;
-            }
-            clubs[activity].current_capacity++;
-            clubs[activity].gender_count[s.gender]++;
-            club_count++;
-            s.activities.push_back(activity);
+    cout << "\nStudent List:\n";
+    for (const auto& student : students) {
+        cout << "Name: " << student.firstName << " " << student.lastName << endl;
+        cout << "Gender: " << student.gender << endl;
+        cout << "Age: " << student.age << endl;
+        cout << "Group: " << student.group << endl;
+        cout << "Activities: ";
+        if (student.activities.empty()) {
+            cout << "None\n";
         } else {
-            cout << "Invalid activity. Try again." << endl;
-        }
-    }
-
-    if (s.activities.empty()) {
-        cout << "You must choose at least one activity." << endl;
-        return false;
-    }
-
-    students.push_back(s);
-    return true;
-}
-
-void view_students() {
-    for (const auto& s : students) {
-        cout << "Name: " << s.firstname << " " << s.surname << ", Gender: " << s.gender
-             << ", Age: " << s.age << ", Group: " << s.group << ", Activities: ";
-        for (const auto& act : s.activities) {
-            cout << act << " ";
-        }
-        cout << endl;
-    }
-}
-
-void view_clubs() {
-    for (const auto& [name, club] : clubs) {
-        cout << "Club: " << name << ", Capacity: " << club.current_capacity << "/" << club.max_capacity << endl;
-    }
-}
-
-void view_sports() {
-    for (const auto& [name, sport] : sports) {
-        cout << "Sport: " << name << ", Capacity: " << sport.current_capacity << "/" << sport.max_capacity << endl;
-    }
-}
-
-void save_to_file(const string& filename) {
-    ofstream file(filename);
-    if (file.is_open()) {
-        for (const auto& s : students) {
-            file << s.firstname << "," << s.surname << "," << s.gender << "," << s.age << "," << s.group << ",";
-            for (const auto& act : s.activities) {
-                file << act << " ";
+            for (const auto& activity : student.activities) {
+                cout << activity << " ";
             }
-            file << endl;
+            cout << endl;
         }
-        file.close();
-        cout << "Data saved to " << filename << endl;
-    } else {
-        cout << "Unable to open file." << endl;
+        cout << "---------------------\n";
     }
 }
 
-void menu() {
-    int choice;
-    initialize_activities();
-
-    do {
-        cout << "1. Add Student\n2. View Students\n3. View Clubs/ Societies\n4. View Sports\n5. Save All Files\n6. Exit\n";
-        cout << "Enter your choice: ";
-        cin >> choice;
-
-        switch (choice) {
-            case 1:
-                if (add_student()) {
-                    cout << "Student added successfully." << endl;
-                } else {
-                    cout << "Failed to add student." << endl;
-                }
-                break;
-            case 2:
-                view_students();
-                break;
-            case 3:
-                view_clubs();
-                break;
-            case 4:
-                view_sports();
-                break;
-            case 5:
-                save_to_file("students.csv");
-                break;
-            case 6:
-                cout << "Exiting..." << endl;
-                break;
-            default:
-                cout << "Invalid choice. Try again." << endl;
-                break;
-        }
-    } while (choice != 6);
+// Function to display all clubs/societies
+void viewClubs(const vector<Club>& clubs) {
+    if (clubs.empty()) {
+        cout << "\nNo clubs/societies added yet.\n";
+        return;
+    }
+    cout << "\nClub/Society List:\n";
+    for (const auto& club : clubs) {
+        cout << "Name: " << club.name << endl;
+        cout << "Capacity: " << club.capacity << endl;
+        cout << "Male Count: " << club.maleCount << endl;
+        cout << "Female Count: " << club.femaleCount << endl;
+        cout << "---------------------\n";
+    }
 }
+
+// Function to display all sports
+void viewSports(const vector<Sport>& sports) {
+    if (sports.empty()) {
+        cout << "\nNo sports added yet.\n";
+        return;
+    }
+    cout << "\nSport List:\n";
+    for (const auto& sport : sports) {
+        cout << "Name: " << sport.name << endl;
+        cout << "Capacity: " << sport.capacity << endl;
+        cout << "Male Count: " << sport.maleCount << endl;
+        cout << "Female Count: " << sport.femaleCount << endl;
+        cout << "---------------------\n";
+    }
+}
+
+// Function to view grouped students
+void viewGroupedStudents(const vector<Student>& students) {
+    if (students.empty()) {
+        cout << "\nNo students added yet.\n";
+        return;
+    }
+    cout << "\nGrouped Student List:\n";
+    for (int i = 1; i <= 3; ++i) {
+        cout << "\nGroup " << i << ":\n";
+        for (const auto& student : students) {
+            if (student.group == i) {
+                cout << "Name: " << student.firstName << " " << student.lastName << endl;
+                cout << "Activities: ";
+                if (student.activities.empty()) {
+                    cout << "None\n";
+                } else {
+                    for (const auto& activity : student.activities) {
+                        cout << activity << " ";
+                    }
+                    cout << endl;
+                }
+                cout << "---------------------\n";
+            }
+        }
+    }
+}
+
+// Function to save data to a CSV file
+void saveData(const vector<Student>& students, const vector<Club>& clubs, const vector<Sport>& sports) {
+    ofstream outputFile("data.csv");
+    if (outputFile.is_open()) {
+        // Write student data
+        outputFile << "Student,FirstName,LastName,Gender,Age,Group,Activities\n";
+        for (const auto& student : students) {
+            outputFile << "Student," << student.firstName << "," << student.lastName << "," << student.gender << ","
+                      << student.age << "," << student.group << ",";
+            for (const auto& activity : student.activities) {
+                outputFile << activity << " ";
+            }
+            outputFile << "\n";
+        }
+
+        // Write club/society data
+        outputFile << "\nClub,Name,Capacity,MaleCount,FemaleCount\n";
+        for (const auto& club : clubs) {
+            outputFile << "Club," << club.name << "," << club.capacity << "," << club.maleCount << ","
+                      << club.femaleCount << "\n";
+        }
+
+        // Write sport data
+        outputFile << "\nSport,Name,Capacity,MaleCount,FemaleCount\n";
+        for (const auto& sport : sports) {
+            outputFile << "Sport," << sport.name << "," << sport.capacity << "," << sport.maleCount << ","
+                      << sport.femaleCount << "\n";
+        }
+        outputFile.close();
+        cout << "\nData saved successfully to data.csv!\n";
+    } else {
+        cout << "\nError opening file for saving data.\n";
+    }
+}
+
+// Function to allocate activities to students
+void allocateActivities(vector<Student>& students, vector<Club>& clubs, vector<Sport>& sports) {
+    // Initialize random number generator
+    random_device rd;
+    mt19937 gen(rd());
+    uniform_int_distribution<> distrib(0, 9);
+
+    for (auto& student : students) {
+        // Determine the number of activities based on the student's sport participation
+        int maxActivities = student.activities.empty() ? 3 : 2;
+        int minActivities = student.activities.empty() ? 1 : 1;
+
+        // Allocate activities randomly until the minimum is reached
+        while (student.activities.size() < minActivities) {
+            // Randomly select a club/society or a sport
+            if (distrib(gen) % 2 == 0) {
+                // Allocate a club/society
+                for (auto& club : clubs) {
+                    if (club.capacity > 0 && club.maleCount < club.capacity / 2 && club.femaleCount < club.capacity / 2) {
+                        if (student.activities.size() < maxActivities) {
+                            student.activities.push_back(club.name);
+                            if (student.gender == 'M') {
+                                club.maleCount++;
+                            } else {
+                                club.femaleCount++;
+                            }
+                            club.capacity--;
+                            break;
+                        }
+                    }
+                }
+            } else {
+                // Allocate a sport
+                for (auto& sport : sports) {
+                    if (sport.capacity > 0 && sport.maleCount < sport.capacity * 0.75 && sport.femaleCount < sport.capacity * 0.75) {
+                        if (student.activities.size() < maxActivities) {
+                            student.activities.push_back(sport.name);
+                            if (student.gender == 'M') {
+                                sport.maleCount++;
+                            } else {
+                                sport.femaleCount++;
+                            }
+                            sport.capacity--;
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+    }
+    cout << "\nActivities allocated successfully!\n";
+}
+
 
 int main() {
-    menu();
+    // Initialize vectors for students, clubs/societies, and sports
+    vector<Student> students;
+    vector<Club> clubs;
+    vector<Sport> sports;
+
+    // Pre-saved students
+    students.push_back({"Jane", "Doe", 'F', 18, 1, {}});
+    students.push_back({"John", "Smith", 'M', 19, 2, {}});
+    students.push_back({"Emily", "Brown", 'F', 18, 3, {}});
+    students.push_back({"David", "Wilson", 'M', 19, 1, {}});
+    students.push_back({"Sarah", "Jones", 'F', 18, 2, {}});
+    students.push_back({"Michael", "Williams", 'M', 19, 3, {}});
+    students.push_back({"Olivia", "Davis", 'F', 18, 1, {}});
+    students.push_back({"James", "Miller", 'M', 19, 2, {}});
+    students.push_back({"Sophia", "Moore", 'F', 18, 3, {}});
+    students.push_back({"Ethan", "Taylor", 'M', 19, 1, {}});
+    students.push_back({"Ava", "Anderson", 'F', 18, 2, {}});
+    students.push_back({"Noah", "Thomas", 'M', 19, 3, {}});
+    students.push_back({"Isabella", "Jackson", 'F', 18, 1, {}});
+    students.push_back({"Liam", "White", 'M', 19, 2, {}});
+    students.push_back({"Mia", "Harris", 'F', 18, 3, {}});
+    students.push_back({"Logan", "Martin", 'M', 19, 1, {}});
+    students.push_back({"Abigail", "Thompson", 'F', 18, 2, {}});
+    students.push_back({"Mason", "Garcia", 'M', 19, 3, {}});
+    students.push_back({"Elizabeth", "Martinez", 'F', 18, 1, {}});
+    students.push_back({"Jacob", "Robinson", 'M', 19, 2, {}});
+
+    // Initialize clubs/societies
+    clubs.push_back({"Journalism Club", 60, 0, 0});
+    clubs.push_back({"Red Cross Society", 60, 0, 0});
+    clubs.push_back({"AISEC", 60, 0, 0});
+    clubs.push_back({"Business Club", 60, 0, 0});
+    clubs.push_back({"Computer Science Club", 60, 0, 0});
+
+    // Initialize sports
+    sports.push_back({"Rugby", 20, 0, 0});
+    sports.push_back({"Athletics", 20, 0, 0});
+    sports.push_back({"Swimming", 20, 0, 0});
+    sports.push_back({"Soccer", 20, 0, 0});
+
+    // Allocate activities to students
+    allocateActivities(students, clubs, sports);
+
+    // Main program loop
+    int choice;
+    do {
+        displayMainMenu();
+        cin >> choice;
+        switch (choice) {
+            case 1:
+                addStudent(students);
+                break;
+            case 2:
+                viewStudents(students);
+                break;
+            case 3:
+                viewClubs(clubs);
+                break;
+            case 4:
+                viewSports(sports);
+                break;
+            case 5:
+                viewGroupedStudents(students);
+                break;
+            case 6:
+                saveData(students, clubs, sports);
+                break;
+            case 7:
+                cout << "\nExiting program...\n";
+                break;
+            default:
+                cout << "\nInvalid choice. Please try again.\n";
+        }
+    } while (choice != 7);
+
     return 0;
 }
-
